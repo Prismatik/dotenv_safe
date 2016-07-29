@@ -23,6 +23,7 @@ func unset(v string) (msg string) {
 func cleanup() {
 	os.Clearenv()
 	os.Remove("example.env")
+	os.Remove("example2.env")
 	os.Remove(".env")
 	os.Remove("foo.env")
 	os.Remove("bar.env")
@@ -81,7 +82,7 @@ func TestFailureMultiple(t *testing.T) {
 
 func TestMissingExampleFile(t *testing.T) {
 	// With a missing example.env file it should fail
-	defer checkFail("open ./example.env: no such file or directory", t)
+	defer checkFail("open example.env: no such file or directory", t)
 	defer cleanup()
 	ioutil.WriteFile(".env", []byte(""), 0655)
 	Load()
@@ -119,4 +120,29 @@ func TestMissingCustom(t *testing.T) {
 	ioutil.WriteFile("example.env", []byte(""), 0655)
 	ioutil.WriteFile("foo.env", []byte(""), 0655)
 	Load("foo.env", "bar.env")
+}
+
+func TestMissingMultipleExamples(t *testing.T) {
+	// With multiple vars across multiple example files it should panic if one is missing
+	defer checkFail(unset("BAZ"), t)
+	defer cleanup()
+	ioutil.WriteFile(".env", []byte("FOO=bar"), 0655)
+	ioutil.WriteFile("example.env", []byte("FOO"), 0655)
+	ioutil.WriteFile("example2.env", []byte("BAZ"), 0655)
+	LoadMany(Config{
+		Envs:     []string{".env"},
+		Examples: []string{"example.env", "example2.env"},
+	})
+}
+
+func TestMissingMultipleExampleFile(t *testing.T) {
+	// With multiple vars across multiple example files it should panic if one is missing
+	defer checkFail("open example2.env: no such file or directory", t)
+	defer cleanup()
+	ioutil.WriteFile(".env", []byte(""), 0655)
+	ioutil.WriteFile("example.env", []byte(""), 0655)
+	LoadMany(Config{
+		Envs:     []string{".env"},
+		Examples: []string{"example.env", "example2.env"},
+	})
 }
