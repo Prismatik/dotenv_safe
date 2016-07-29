@@ -14,6 +14,7 @@ type Config struct {
 }
 
 func Load(filenames ...string) {
+	// Load required env vars from the default example.env file, and read in env vars from a list of filesnames provided that defaults to []string{".env"}
 	envs := envsOrDefault(filenames...)
 	LoadMany(Config{
 		Envs:     envs,
@@ -22,6 +23,7 @@ func Load(filenames ...string) {
 }
 
 func LoadMany(config Config) {
+	// Pass in a Config that describes the explicit list of env files and example files to load
 	err := godotenv.Load(config.Envs...)
 	check(err)
 
